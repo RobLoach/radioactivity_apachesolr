@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * @file
+ * Radioactivity Apache Solr Search integration Drupal module.
+ */
+
+/**
+ * Implements hook_apachesolr_field_mappings().
+ *
+ * Add support for the radioactivity type. It's set to be a non multiple value
+ * otherwise you're not able to sort on this field. You'll get a Solr error.
+ */
+function radioactivity_apachesolr_apachesolr_field_mappings() {
+  $mappings = array(
+    'radioactivity' => array(
+      'indexing_callback' => 'radioactivity_apachesolr_field_indexing_callback',
+      'index_type' => 'tfloat',
+      'facets' => FALSE,
+      'query types' => array('term', 'numeric_range'),
+      'query type' => 'term',
+      'facet mincount allowed' => FALSE,
+      'multiple' => FALSE,
+    ),
+  );
+  return $mappings;
+}
+
+/**
+ * Callback to create the field values for the radioactivity type.
+ *
+ * @param object $entity
+ * @param string $field_name
+ * @param string $index_key
+ * @param array $field_info
+ *
+ * @return array $fields
+ */
+function radioactivity_apachesolr_field_indexing_callback($entity, $field_name, $index_key, array $field_info) {
+  $fields = array();
+
+  if ($field_info['index_type'] == 'tfloat') {
+    // Loop trough all the values.
+    if ($values = field_get_items('node', $entity, $field_name)) {
+      foreach ($values as $value) {
+        $fields[] = array(
+          'key' => $index_key,
+          'value' => apachesolr_floatval($value['radioactivity_energy']),
+        );
+      }
+    }
+
+    // Provide a value even when it's not there so that we can order it.
+    if (empty($fields) && isset($entity->{$field_name})) {
+      $fields[] = array(
+        'key' => $index_key,
+        'value' => 0,
+      );
+    }
+  }
+
+  // Return the fields.
+  return $fields;
+}

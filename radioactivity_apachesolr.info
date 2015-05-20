@@ -1,0 +1,7 @@
+name = Radioactivity Apache Solr Integration
+description = Adds Apache Solr Search integration to Radioactivity.
+core = 7.x
+package = Radioactivity
+
+dependencies[] = radioactivity
+dependencies[] = apachesolr
